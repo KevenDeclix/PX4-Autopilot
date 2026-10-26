@@ -190,6 +190,21 @@ public:
 	 */
 	static const trajectory_setpoint_s empty_trajectory_setpoint;
 
+	/**
+	 * Forbid active braking: the horizontal acceleration has to stay inside a cone around the direction of motion
+	 * @param enabled true to apply the limit
+	 * @param cone_angle half angle of the cone in radians
+	 * @param min_speed horizontal speed in m/s below which the limit is not applied
+	 * @param min_lateral_acc lateral acceleration in m/s^2 that is always allowed, even outside the cone
+	 */
+	void setBrakingLimit(const bool enabled, const float cone_angle, const float min_speed, const float min_lateral_acc)
+	{
+		_braking_limit_enabled = enabled;
+		_braking_cone_angle = cone_angle;
+		_braking_min_speed = min_speed;
+		_braking_min_lateral_acc = min_lateral_acc;
+	}
+
 private:
 	// The range limits of the hover thrust configuration/estimate
 	static constexpr float HOVER_THRUST_MIN = 0.1f;
@@ -218,6 +233,13 @@ private:
 
 	float _hover_thrust{}; ///< Thrust [HOVER_THRUST_MIN, HOVER_THRUST_MAX] with which the vehicle hovers not accelerating down or up with level orientation
 	bool _decouple_horizontal_and_vertical_acceleration{true}; ///< Ignore vertical acceleration setpoint to remove its effect on the tilt setpoint
+
+	bool _limitBraking(); ///< Keep the horizontal acceleration inside the cone, returns true if it was limited
+
+	bool _braking_limit_enabled{false}; ///< No active braking (VelOffboard)
+	float _braking_cone_angle{}; ///< Half angle of the allowed tilt direction around the motion [rad]
+	float _braking_min_speed{}; ///< Horizontal speed below which braking is allowed [m/s]
+	float _braking_min_lateral_acc{}; ///< Lateral acceleration always allowed, even outside the cone [m/s^2]
 
 	// States
 	matrix::Vector3f _pos; /**< current position */

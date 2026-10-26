@@ -561,6 +561,7 @@ bool Failsafe::isFailsafeIgnored(uint8_t user_intended_mode, int32_t exception_m
 		return exception_mask_parameter & (int)LinkLossExceptionBits::AutoModes;
 
 	case vehicle_status_s::NAVIGATION_STATE_OFFBOARD:
+	case vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD:
 		return exception_mask_parameter & (int)LinkLossExceptionBits::Offboard;
 
 	case vehicle_status_s::NAVIGATION_STATE_EXTERNAL1:

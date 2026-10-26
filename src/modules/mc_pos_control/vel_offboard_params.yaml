@@ -1,0 +1,54 @@
+module_name: mc_pos_control
+parameters:
+- group: Multicopter Vel Offboard
+  definitions:
+    VOF_BRAKE:
+      description:
+        short: Vel Offboard brake mode
+        long: |-
+          When disabled, the vehicle never tilts against its direction of motion in Vel Offboard:
+          it slows down by drag only, unless the new setpoint changes direction by more than VOF_CONE_ANG.
+          When enabled, the normal velocity controller (active braking) is used.
+      type: boolean
+      default: 0
+    VOF_CONE_ANG:
+      description:
+        short: Vel Offboard allowed tilt cone
+        long: |-
+          Half angle of the cone, around the direction of motion, inside which the vehicle may tilt
+          when the brake mode is off. A setpoint outside this cone counts as a change of direction
+          and allows active braking.
+      type: float
+      default: 30.0
+      unit: deg
+      min: 0.0
+      max: 89.0
+      decimal: 0
+      increment: 1.0
+    VOF_COAST_VMIN:
+      description:
+        short: Vel Offboard minimum coasting speed
+        long: |-
+          Below this horizontal speed the direction of motion is not reliable and normal
+          velocity control (with braking) is used.
+      type: float
+      default: 0.5
+      unit: m/s
+      min: 0.0
+      max: 5.0
+      decimal: 1
+      increment: 0.1
+    VOF_LATERAL_AMIN:
+      description:
+        short: Vel Offboard minimum lateral acceleration limit
+        long: |-
+          When the brake mode is off, the lateral acceleration (perpendicular to the direction of motion)
+          is not reduced below this value, even if it falls outside VOF_CONE_ANG. This allows turning
+          while coasting. Set to 0 to strictly keep the acceleration inside the cone.
+      type: float
+      default: 2.0
+      unit: m/s^2
+      min: 0.0
+      max: 100.0
+      decimal: 1
+      increment: 0.5

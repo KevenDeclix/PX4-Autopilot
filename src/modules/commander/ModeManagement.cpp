@@ -771,6 +771,11 @@ bool ModeManagement::currentModeAcceptsOffboardSetpoints(uint8_t nav_state) cons
 		return true;
 	}
 
+	// VEL_OFFBOARD mode always accepts offboard setpoints
+	if (nav_state == vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD) {
+		return true;
+	}
+
 	// Check if it's an external mode that requests offboard setpoints
 	if (_modes.valid(nav_state)) {
 		return _modes.mode(nav_state).request_offboard_setpoints;

@@ -164,6 +164,11 @@ void getModeRequirements(uint8_t vehicle_type, failsafe_flags_s &flags)
 	setRequirement(vehicle_status_s::NAVIGATION_STATE_OFFBOARD, flags.mode_req_attitude);
 	setRequirement(vehicle_status_s::NAVIGATION_STATE_OFFBOARD, flags.mode_req_offboard_signal);
 
+	// NAVIGATION_STATE_VEL_OFFBOARD
+	setRequirement(vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD, flags.mode_req_angular_velocity);
+	setRequirement(vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD, flags.mode_req_attitude);
+	setRequirement(vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD, flags.mode_req_offboard_signal);
+
 	// NAVIGATION_STATE_STAB
 	setRequirement(vehicle_status_s::NAVIGATION_STATE_STAB, flags.mode_req_angular_velocity);
 	setRequirement(vehicle_status_s::NAVIGATION_STATE_STAB, flags.mode_req_attitude);

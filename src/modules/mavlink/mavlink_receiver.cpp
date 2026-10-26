@@ -1203,6 +1203,14 @@ MavlinkReceiver::fill_offboard_control_mode(const trajectory_setpoint_s &setpoin
 	return ocm;
 }
 
+bool
+MavlinkReceiver::vel_offboard_active()
+{
+	vehicle_status_s vehicle_status{};
+	_vehicle_status_sub.copy(&vehicle_status);
+	return vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD;
+}
+
 void
 MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t *msg)
 {
@@ -1290,6 +1298,17 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 
 
 		offboard_control_mode_s ocm = fill_offboard_control_mode(setpoint);
+
+		if (vel_offboard_active()) {
+			// VelOffboard only accepts velocity (3 axes) + yaw rate
+			const bool velocity_and_yaw_speed_only = matrix::Vector3f(setpoint.velocity).isAllFinite()
+					&& PX4_ISFINITE(setpoint.yawspeed)
+					&& !ocm.position && !ocm.acceleration && !ocm.attitude;
+
+			if (!velocity_and_yaw_speed_only) {
+				return;
+			}
+		}
 
 		if (ocm.acceleration && (type_mask & POSITION_TARGET_TYPEMASK_FORCE_SET)) {
 			mavlink_log_critical(&_mavlink_log_pub, "SET_POSITION_TARGET_LOCAL_NED force not supported\t");
@@ -1409,6 +1428,10 @@ MavlinkReceiver::handle_message_set_position_target_global_int(mavlink_message_t
 
 
 		offboard_control_mode_s ocm = fill_offboard_control_mode(setpoint);
+
+		if (vel_offboard_active()) {
+			return;
+		}
 
 		if (ocm.acceleration && (type_mask & POSITION_TARGET_TYPEMASK_FORCE_SET)) {
 			mavlink_log_critical(&_mavlink_log_pub, "SET_POSITION_TARGET_GLOBAL_INT force not supported\t");
@@ -1841,6 +1864,10 @@ MavlinkReceiver::handle_message_set_attitude_target(mavlink_message_t *msg)
 
 		vehicle_status_s vehicle_status{};
 		_vehicle_status_sub.copy(&vehicle_status);
+
+		if (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD) {
+			return;
+		}
 
 		if ((attitude || body_rates) && has_thrust) {
 			offboard_control_mode_s ocm{};

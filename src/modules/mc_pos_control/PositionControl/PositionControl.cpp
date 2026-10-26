@@ -152,6 +152,8 @@ void PositionControl::_velocityControl(const float dt)
 	// No control input from setpoints or corresponding states which are NAN
 	ControlMath::addIfNotNanVector3f(_acc_sp, acc_sp_velocity);
 
+	const bool braking_limited = _braking_limit_enabled && _limitBraking();
+
 	_accelerationControl();
 
 	// Integrator anti-windup in vertical direction
@@ -196,6 +198,14 @@ void PositionControl::_velocityControl(const float dt)
 		const Vector2f acc_sp_xy = _acc_sp.xy();
 
 		vel_error.xy() = Vector2f(vel_error) - arw_gain * (acc_sp_xy - acc_sp_xy_produced);
+	}
+
+	// While gliding, drag is not compensated: drop the horizontal integral
+	if (braking_limited) {
+		vel_error(0) = 0.f;
+		vel_error(1) = 0.f;
+		_vel_int(0) = 0.f;
+		_vel_int(1) = 0.f;
 	}
 
 	// Make sure integral doesn't get NAN
@@ -270,4 +280,42 @@ void PositionControl::getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_
 {
 	ControlMath::thrustToAttitude(_thr_sp, _yaw_sp, attitude_setpoint);
 	attitude_setpoint.yaw_sp_move_rate = _yawspeed_sp;
+}
+
+bool PositionControl::_limitBraking()
+{
+	const Vector2f vel_xy(_vel);
+	const Vector2f vel_sp_xy(_vel_sp);
+	const Vector2f acc_xy(_acc_sp);
+	const float speed = vel_xy.norm();
+
+	if (!vel_xy.isAllFinite() || !vel_sp_xy.isAllFinite() || !acc_xy.isAllFinite() || speed < _braking_min_speed) {
+		return false;
+	}
+
+	const Vector2f direction = vel_xy / speed;
+
+	// Change of direction: the setpoint leaves the cone, normal braking is allowed
+	if (vel_sp_xy.longerThan(_braking_min_speed)
+	    && vel_sp_xy.unit_or_zero().dot(direction) < cosf(_braking_cone_angle)) {
+		return false;
+	}
+
+	// Split the acceleration along the motion and across it
+	const float acc_along = acc_xy.dot(direction);
+	const Vector2f acc_lateral = acc_xy - direction * acc_along;
+
+	// No component against the motion, and the lateral part stays inside the cone
+	const float acc_along_limited = math::max(acc_along, 0.f);
+	const float acc_lateral_max = math::max(acc_along_limited * tanf(_braking_cone_angle), _braking_min_lateral_acc);
+	Vector2f acc_lateral_limited = acc_lateral;
+
+	if (acc_lateral.longerThan(acc_lateral_max)) {
+		acc_lateral_limited = acc_lateral.unit_or_zero() * acc_lateral_max;
+	}
+
+	const Vector2f acc_xy_limited = direction * acc_along_limited + acc_lateral_limited;
+	_acc_sp.xy() = acc_xy_limited;
+
+	return (acc_xy - acc_xy_limited).longerThan(1e-3f);
 }

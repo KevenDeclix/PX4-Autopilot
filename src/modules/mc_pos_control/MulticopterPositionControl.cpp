@@ -410,6 +410,7 @@ void MulticopterPositionControl::Run()
 		}
 
 		_vehicle_land_detected_sub.update(&_vehicle_land_detected);
+		_vehicle_status_sub.update(&_vehicle_status);
 
 		if (_hover_thrust_estimate_sub.updated()) {
 			hover_thrust_estimate_s hte;
@@ -520,6 +521,12 @@ void MulticopterPositionControl::Run()
 			const float tilt_limit_deg = (_takeoff.getTakeoffState() < TakeoffState::flight)
 						     ? _param_mpc_tiltmax_lnd.get() : _param_mpc_tiltmax_air.get();
 			_control.setTiltLimit(_tilt_limit_slew_rate.update(math::radians(tilt_limit_deg), dt));
+
+			// VelOffboard: no active braking unless the brake mode is on
+			const bool vel_offboard = _vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD;
+			_control.setBrakingLimit(vel_offboard && !_param_vof_brake.get(),
+						 math::radians(_param_vof_cone_ang.get()), _param_vof_coast_vmin.get(),
+						 _param_vof_lateral_amin.get());
 
 			const float speed_up = _takeoff.updateRamp(dt,
 					       PX4_ISFINITE(_vehicle_constraints.speed_up) ? _vehicle_constraints.speed_up : _param_mpc_z_vel_max_up.get());

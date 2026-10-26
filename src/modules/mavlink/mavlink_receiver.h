@@ -277,6 +277,8 @@ private:
 
 	static offboard_control_mode_s fill_offboard_control_mode(const trajectory_setpoint_s &setpoint);
 
+	bool vel_offboard_active();
+
 	void schedule_tune(const char *tune);
 
 	void update_message_statistics(const mavlink_message_t &message);

@@ -142,6 +142,13 @@ void getVehicleControlMode(uint8_t nav_state, uint8_t vehicle_type,
 
 		break;
 
+	case vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD:
+		// Always a velocity setpoint, regardless of offboard_control_mode
+		vehicle_control_mode.flag_control_offboard_enabled = true;
+		getControlMode(SetpointType::Trajectory, vehicle_control_mode);
+		vehicle_control_mode.flag_control_position_enabled = false;
+		break;
+
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_FOLLOW_TARGET:
 
 	// Follow Target supports RC adjustment, so disable auto control mode to disable

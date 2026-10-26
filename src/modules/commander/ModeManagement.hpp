@@ -239,7 +239,8 @@ public:
 
 	bool currentModeAcceptsOffboardSetpoints(uint8_t nav_state) const
 	{
-		return nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD;
+		return nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD
+		       || nav_state == vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD;
 	}
 
 	void updateActiveConfigOverrides(uint8_t nav_state, config_overrides_s &overrides_in_out) { }

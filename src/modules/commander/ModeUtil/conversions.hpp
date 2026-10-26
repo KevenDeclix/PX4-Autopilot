@@ -68,6 +68,8 @@ static inline navigation_mode_t navigation_mode(uint8_t nav_state)
 
 	case vehicle_status_s::NAVIGATION_STATE_OFFBOARD: return navigation_mode_t::offboard;
 
+	case vehicle_status_s::NAVIGATION_STATE_VEL_OFFBOARD: return navigation_mode_t::vel_offboard;
+
 	case vehicle_status_s::NAVIGATION_STATE_STAB: return navigation_mode_t::stab;
 
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF: return navigation_mode_t::auto_takeoff;
